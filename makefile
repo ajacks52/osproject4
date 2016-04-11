@@ -11,7 +11,7 @@ all: $(EXECUTABLES)
 
 .SUFFIXES: .c .o
 .c.o:
-	$(CC) $(CFLAGS) -c $*.c
+	$(CC) $(CFLAGS) -c -w $*.c
 
 double-check: double-check.o
 	$(CC) $(CFLAGS) -o double-check double-check.o $(LIBS) -lpthread -lm

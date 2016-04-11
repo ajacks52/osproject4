@@ -20,6 +20,7 @@
 typedef struct {
     Dllist users;
     pthread_cond_t *block_elevator;
+    int elements_in_list;
 } global_list;
 
 void initialize_simulation(Elevator_Simulation *es)
@@ -28,6 +29,7 @@ void initialize_simulation(Elevator_Simulation *es)
     g_list->users = new_dllist();
     g_list->block_elevator = talloc(pthread_cond_t, 1);
     pthread_cond_init(g_list->block_elevator, NULL);
+    g_list->elements_in_list = 0;
     es->v = g_list;
 }
 
@@ -45,6 +47,8 @@ void wait_for_elevator(Person *p)
     // add person to global list
     global_list *g_list = p->es->v;
     dll_append(g_list->users, new_jval_v(p));
+    // increment elements_in_list
+    g_list->elements_in_list++;
 
     // signal cond variable for "blocking elevtors"
     pthread_cond_signal(g_list->block_elevator);
@@ -97,43 +101,52 @@ void *elevator(void *arg)
         // global list struct
         global_list *g_list = e->es->v;
 
-        /* wait till someone enters the global list */
-        while (dll_empty(g_list->users))
+        /* start from floor 1 and work your way up continuously */
+        int current_floor;
+        for (current_floor = 1; current_floor <= e->es->nfloors; current_floor++)
         {
-          // get person's lock
-          pthread_mutex_lock(e->es->lock);
-          // signal cond variable for "blocking elevtors"
-          pthread_cond_wait(g_list->block_elevator, e->es->lock);
-          // unlock the mutex
-          pthread_mutex_unlock(e->es->lock);
+          move_to_floor(e, current_floor);
+
+          // check if someone needs to be dropped off
+          while () 
+          {
+
+          }
+
+          // check if someone waiting on current_floor to be picked up
+
+
+
+
         }
 
-        pthread_mutex_lock(e->es->lock);
-        // get first person in global list
-        Person *p = (Person *) jval_v(dll_val(dll_first(g_list->users)));
-        // remove person being serviced from list
-        dll_delete_node(g_list->users->flink);
-        pthread_mutex_unlock(e->es->lock);
-
-        /** pick up person */
-        if (e->onfloor != p->from){}
-            move_to_floor(e,p->from);
-        open_door(e);
-        p->e = e;   // put the elevator in the person's e field
-        pthread_mutex_lock(e->lock);
-        pthread_cond_signal(p->cond);
-        pthread_cond_wait(e->cond, e->lock);
-        pthread_mutex_unlock(e->lock);
-        close_door(e);
-
-        /** move person to their destination floor */
-        move_to_floor(e,p->to);
-        open_door(e);
-        pthread_mutex_lock(e->lock);
-        pthread_cond_signal(p->cond);
-        pthread_cond_wait(e->cond, e->lock);
-        pthread_mutex_unlock(e->lock);
-        close_door(e);
+        // pthread_mutex_lock(e->es->lock);
+        // // get first person in global list
+        // Person *p = (Person *) jval_v(dll_val(dll_first(g_list->users)));
+        // // remove person being serviced from list
+        // dll_delete_node(g_list->users->flink);
+        // g_list->elements_in_list--;
+        // pthread_mutex_unlock(e->es->lock);
+        //
+        // /** pick up person */
+        // if (e->onfloor != p->from){}
+        //     move_to_floor(e,p->from);
+        // open_door(e);
+        // p->e = e;   // put the elevator in the person's e field
+        // pthread_mutex_lock(e->lock);
+        // pthread_cond_signal(p->cond);
+        // pthread_cond_wait(e->cond, e->lock);
+        // pthread_mutex_unlock(e->lock);
+        // close_door(e);
+        //
+        // /** move person to their destination floor */
+        // move_to_floor(e,p->to);
+        // open_door(e);
+        // pthread_mutex_lock(e->lock);
+        // pthread_cond_signal(p->cond);
+        // pthread_cond_wait(e->cond, e->lock);
+        // pthread_mutex_unlock(e->lock);
+        // close_door(e);
     }
     return NULL;
 }
