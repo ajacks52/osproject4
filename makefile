@@ -3,7 +3,7 @@ EXECUTABLES = elevator_null reorder double-check
 
 CC = gcc
 LIBS = libfdr.a
-CFLAGS = -O0 -g -std=c99
+CFLAGS = -O0 -g
 
 LIBFDROBJS = dllist.o fields.o jval.o jrb.o
 
