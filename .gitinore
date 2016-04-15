@@ -1,0 +1,3 @@
+# no c binaries 
+*.o
+*.a
