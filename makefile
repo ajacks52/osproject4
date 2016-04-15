@@ -3,7 +3,7 @@ EXECUTABLES = elevator_null reorder double-check
 
 CC = gcc
 LIBS = libfdr.a
-CFLAGS = -O0 -g
+CFLAGS = -O0 -g -std=c99
 
 LIBFDROBJS = dllist.o fields.o jval.o jrb.o
 
@@ -34,9 +34,6 @@ elevator.o: elevator.h
 libfdr.a: $(LIBFDROBJS)
 	ar ru libfdr.a $(LIBFDROBJS)
 	ranlib libfdr.a
-
-test1: elevator_part_1
-	./elevator_part_1 5 1 5 1 1 20 0
 
 clean:
 	rm -f core *.o $(EXECUTABLES) *~ libfdr.a

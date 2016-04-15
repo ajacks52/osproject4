@@ -35,23 +35,27 @@ void initialize_elevator(Elevator *e)
 {}
 
 void initialize_person(Person *p)
-{}
+{
+  global_list *g_list = p->es->v;
+  // get lock
+  pthread_mutex_lock(p->es->lock);
+  // add person to global list
+  dll_append(g_list->users, new_jval_v(p));
+  // unlock the mutex
+  pthread_mutex_unlock(p->es->lock);
+}
 
 void wait_for_elevator(Person *p)
 {
-    // get person's lock
-    pthread_mutex_lock(p->es->lock);
-
-    // add person to global list
     global_list *g_list = p->es->v;
-    dll_append(g_list->users, new_jval_v(p));
-
-    // signal cond variable for "blocking elevtors"
+    // get lock
+    pthread_mutex_lock(p->es->lock);
+    // signal cond variable to wake up sleeping elevator
     pthread_cond_signal(g_list->block_elevator);
     // unlock the mutex
     pthread_mutex_unlock(p->es->lock);
 
-    // get the person's mutex lock
+    // get the mutex lock
     pthread_mutex_lock(p->lock);
     // block on the person's condition variable
     pthread_cond_wait(p->cond, p->lock);
@@ -91,22 +95,20 @@ void *elevator(void *arg)
 {
 
     Elevator *e = (Elevator *) arg;
-
+    // global list struct
+    global_list *g_list = e->es->v;
     while(1)
     {
-        // global list struct
-        global_list *g_list = e->es->v;
-
         /* wait till someone enters the global list */
+        pthread_mutex_lock(e->es->lock);
         while (dll_empty(g_list->users))
         {
-          // get person's lock
-          pthread_mutex_lock(e->es->lock);
-          // signal cond variable for "blocking elevtors"
+          // get lock
+          // sleep until the block cond elevator is signaled
           pthread_cond_wait(g_list->block_elevator, e->es->lock);
           // unlock the mutex
-          pthread_mutex_unlock(e->es->lock);
         }
+        pthread_mutex_unlock(e->es->lock);
 
         pthread_mutex_lock(e->es->lock);
         // get first person in global list
