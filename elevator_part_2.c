@@ -33,7 +33,7 @@ typedef struct {
 void let_people_on (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list);
 void let_people_off (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list);
 void service_people (Elevator *e, int current_floor, Dllist list);
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 void initialize_simulation(Elevator_Simulation *es)
@@ -77,15 +77,15 @@ void initialize_person(Person *p)
   pthread_mutex_lock(p->es->lock);
   if (p->from < p->to)
   {
-    pthread_mutex_lock(p->lock);
+    // pthread_mutex_lock(p->lock);
     dll_append(g_list->users_up[p->from], new_jval_v(p));
-    pthread_mutex_unlock(p->lock);
+    // pthread_mutex_unlock(p->lock);
   }
   else
   {
-    pthread_mutex_lock(p->lock);
+    // pthread_mutex_lock(p->lock);
     dll_append(g_list->users_down[p->from], new_jval_v(p));
-    pthread_mutex_unlock(p->lock);
+    // pthread_mutex_unlock(p->lock);
   }
   pthread_mutex_unlock(p->es->lock);
 }
@@ -132,18 +132,19 @@ void *elevator(void *arg)
 
   while (true)
   {
-    // if(DEBUG)
-    // {
-    //   Dllist tmp;
-    //   dll_traverse(tmp, e->people)
-    //   {
-    //     Person *p = (Person *) jval_v(dll_val(tmp));
-    //     printf(ANSI_COLOR_GREEN "%d %s, %d\n"ANSI_COLOR_RESET, pthread_self(), p->fname, p->to);
-    //   }
-    // }
+    if(DEBUG)
+    {
+      Dllist tmp;
+      dll_traverse(tmp, e->people)
+      {
+        Person *p = (Person *) jval_v(dll_val(tmp));
+        printf(ANSI_COLOR_GREEN "%d %s, %d\n"ANSI_COLOR_RESET, pthread_self(), p->fname, p->to);
+      }
+    }
 
     /* start from floor 1 and work your way up then back down continuously */
-
+    if(DEBUG)
+    printf("%d\n", current_floor);
     move_to_floor(e, current_floor);
 
     // pthread_mutex_lock(e->es->lock);
@@ -151,97 +152,90 @@ void *elevator(void *arg)
     let_people_off (e, going_up, current_floor, e_list);
     // pthread_mutex_unlock(e->es->lock);
 
-
     if (e->door_open)
     close_door(e);
-    if (e->onfloor == e->es->nfloors)
-    going_up = 0;
-    else if (e->onfloor == 1)
-    going_up = 1;
+
+
 
     if (going_up)
     current_floor++;
     else if (!going_up)
     current_floor--;
+
+    if (e->onfloor == e->es->nfloors-1)
+    going_up = 0;
+    else if (e->onfloor == 2)
+    going_up = 1;
   }
   return NULL;
 }
 
 void let_people_on (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list)
 {
-  if (g_list->users_up[e->onfloor]->flink == g_list->users_up[e->onfloor]
-    && g_list->users_down[e->onfloor]->flink == g_list->users_down[e->onfloor])
-    return;
-
-    if (going_up)
-    {
-      service_people (e, current_floor, g_list->users_up[current_floor]);
-    }
-    if (!going_up)
-    {
-      service_people (e, current_floor, g_list->users_down[current_floor]);
-    }
-  }
-
-  void service_people (Elevator *e, int current_floor, Dllist list)
+  pthread_mutex_lock(g_list->block_elevator);
+  if (going_up)
   {
-    user_list_struct_t *e_list = e->v;
-
-    pthread_mutex_lock(e_list->block_elevator);
-    while (list->flink != list)
-    {
-      Person *p = (Person *)(jval_v(list->flink->val));
-      if(DEBUG)
-      printf(ANSI_COLOR_BLUE "%d, %s, %d, %d\n" ANSI_COLOR_RESET, pthread_self(), p->fname, p->from, p->to);
-
-      dll_delete_node(list->flink);
-
-      if (!e->door_open)
-      {
-        open_door(e);
-      }
-
-      p->e = e;   // put the elevator in the person's e field
-      pthread_mutex_lock(p->lock);
-      dll_append(e_list->users_leaving[p->to], new_jval_v(p));
-      pthread_mutex_unlock(p->lock);
-
-      /////get elevators lock, signal person, sleep//////////
-      pthread_mutex_lock(p->lock);
-      pthread_cond_signal(p->cond);
-      pthread_mutex_unlock(p->lock);
-
-      pthread_mutex_lock(e->lock);
-      pthread_cond_wait(e->cond, e->lock);
-      pthread_mutex_unlock(e->lock);
-    }
-    pthread_mutex_unlock(e_list->block_elevator);
+    service_people (e, current_floor, g_list->users_up[current_floor]);
   }
-
-  void let_people_off (Elevator * e, int going_up, int current_floor, user_list_struct_t *g_list)
+  if (!going_up)
   {
-    Dllist tmp;
-
-    if (g_list->users_leaving[e->onfloor]->flink == g_list->users_leaving[e->onfloor])
-    return;
-
-    while (g_list->users_leaving[current_floor]->flink != g_list->users_leaving[current_floor])
-    {
-      Person *p = (Person *)(jval_v(g_list->users_leaving[current_floor]->flink->val));
-
-      if(DEBUG)
-      printf(ANSI_COLOR_RED "%d, %s, %d, %d\n" ANSI_COLOR_RESET, pthread_self(), p->fname, p->from, p->to);
-
-      if (!e->door_open)
-      {
-        open_door(e);
-      }
-      // remove person from list
-      dll_delete_node(g_list->users_leaving[current_floor]->flink);
-
-      pthread_mutex_lock(e->lock);
-      pthread_cond_signal(p->cond);
-      pthread_cond_wait(e->cond, e->lock);
-      pthread_mutex_unlock(e->lock);
-    }
+    service_people (e, current_floor, g_list->users_down[current_floor]);
   }
+  pthread_mutex_unlock(g_list->block_elevator);
+}
+
+void service_people (Elevator *e, int current_floor, Dllist list)
+{
+  user_list_struct_t *e_list = e->v;
+
+  while (list->flink != list)
+  {
+    if (!e->door_open)
+    {
+      open_door(e);
+    }
+
+    Person *p = (Person *)(jval_v(list->flink->val));
+    if(DEBUG)
+    printf(ANSI_COLOR_BLUE "%d, %s, %d, %d\n" ANSI_COLOR_RESET, pthread_self(), p->fname, p->from, p->to);
+
+    dll_delete_node(list->flink);
+
+    p->e = e;   // put the elevator in the person's e field
+    pthread_mutex_lock(p->lock);
+    dll_append(e_list->users_leaving[p->to], new_jval_v(p));
+    pthread_mutex_unlock(p->lock);
+
+    /////get elevators lock, signal person, sleep//////////
+    pthread_mutex_lock(p->lock);
+    pthread_cond_signal(p->cond);
+    pthread_mutex_unlock(p->lock);
+
+    pthread_mutex_lock(e->lock);
+    pthread_cond_wait(e->cond, e->lock);
+    pthread_mutex_unlock(e->lock);
+  }
+}
+
+void let_people_off (Elevator * e, int going_up, int current_floor, user_list_struct_t *g_list)
+{
+  while (g_list->users_leaving[current_floor]->flink != g_list->users_leaving[current_floor])
+  {
+    Person *p = (Person *)(jval_v(g_list->users_leaving[current_floor]->flink->val));
+
+    if(DEBUG)
+    printf(ANSI_COLOR_RED "%d, %s, %d, %d\n" ANSI_COLOR_RESET, pthread_self(), p->fname, p->from, p->to);
+
+    if (!e->door_open)
+    {
+      open_door(e);
+    }
+    // remove person from list
+    dll_delete_node(g_list->users_leaving[current_floor]->flink);
+
+    pthread_mutex_lock(e->lock);
+    pthread_cond_signal(p->cond);
+    pthread_cond_wait(e->cond, e->lock);
+    pthread_mutex_unlock(e->lock);
+  }
+}
