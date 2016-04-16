@@ -1,5 +1,4 @@
-#EXECUTABLES = elevator_null elevator_part_1 elevator_part_2 reorder double-check
-EXECUTABLES = elevator_part_1 elevator_part_2 elevator_part_3 elevator_null reorder double-check
+EXECUTABLES = elevator_null elevator_part_1 elevator_part_2 elevator_part_3 reorder double-check
 
 CC = gcc
 LIBS = libfdr.a

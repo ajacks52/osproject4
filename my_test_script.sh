@@ -16,6 +16,9 @@ declare -a runs=(
 	'100 4 .01 .01 .01 12 0'
 	);
 
+make clean
+make all	
+
 # printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
 # for i in "${runs[@]}"
 # do
