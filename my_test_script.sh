@@ -1,5 +1,4 @@
-#
-#!/bin/bash
+#!/usr/bin/env bash
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -17,31 +16,40 @@ declare -a runs=(
 	'100 4 .01 .01 .01 12 0'
 	);
 
-printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
-for i in "${runs[@]}"
-do
-	printf "Test: $i\n"
-	./elevator_part_1 $i | ./reorder | ./double-check
-done
+# printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
+# for i in "${runs[@]}"
+# do
+# 	printf "Test: $i\n"
+# 	./elevator_part_1 $i | ./reorder | ./double-check
+# done
+#
+# printf "\n${RED}Reoder Tests For Part 2, no output means it's working.${NC}\n"
+# for i in "${runs[@]}"
+# do
+# 	printf "Test: $i\n"
+# 	./elevator_part_2 $i | ./reorder | ./double-check
+# done
 
-printf "\n${RED}Reoder Tests For Part 2, no output means it's working.${NC}\n"
-for i in "${runs[@]}"
-do
-	printf "Test: $i\n"
-	./elevator_part_2 $i | ./reorder | ./double-check
-done
+# printf "\n${RED}Reoder Tests For Part 3, no output means it's working.${NC}\n"
+# for i in "${runs[@]}"
+# do
+# 	printf "Test: $i\n"
+# 	./elevator_part_3 $i | ./reorder | ./double-check
+# done
 
-printf "${RED}My elevator #1${NC}\n"
-for i in `seq 1 8`;
-do
-	./run_and_time.sh ./elevator_part_1 $i $nruns 0
-done
-
-printf "\n${RED}His elevator #1${NC}\n"
-for i in `seq 1 8`;
-do
-	./run_and_time.sh ./his_part_1 $i $nruns 0
-done
+# printf "\n${RED}My elevator #1${NC}\n"
+# for i in `seq 1 8`;
+# do
+# 	echo "test $i"
+# 	./run_and_time.sh ./elevator_part_1 $i $nruns 0
+# done
+#
+# printf "\n${RED}His elevator #1${NC}\n"
+# for i in `seq 1 8`;
+# do
+# 	echo "test $i"
+# 	./run_and_time.sh ./his_part_1 $i $nruns 0
+# done
 
 printf "\n${RED}My elevator #2${NC}\n"
 for i in `seq 1 8`;

@@ -2,7 +2,7 @@
 * Created by Adam Mitchell on 4/2/16.
 *
 *
-* Part 2 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
+* Part 3 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
 * and be delivered the floor they request.  The concepts involved here are p_thread synchronization and scheduling
 * algorithms.
 */
@@ -24,7 +24,8 @@
 #define talloc(ty, sz) (ty *) malloc ((sz) * sizeof(ty))
 
 typedef struct {
-  Dllist users [100];
+  Dllist users_up [100];
+  Dllist users_down [100];
   Dllist users_leaving [100];
   pthread_cond_t *block_elevator;
 } user_list_struct_t;
@@ -32,9 +33,9 @@ typedef struct {
 void let_people_on (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list);
 void let_people_off (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list);
 void service_people (Elevator *e, int current_floor, Dllist list);
-int rand_lim(int limit);
+int randr(int limit);
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 void initialize_simulation(Elevator_Simulation *es)
@@ -47,7 +48,8 @@ void initialize_simulation(Elevator_Simulation *es)
   int i = 1;
   for(; i <= es->nfloors; i++)
   {
-    g_list->users[i] = new_dllist();
+    g_list->users_up[i] = new_dllist();
+    g_list->users_down[i] = new_dllist();
   }
 
   es->v = g_list;
@@ -75,11 +77,18 @@ void initialize_person(Person *p)
   user_list_struct_t *g_list = p->es->v;
 
   pthread_mutex_lock(p->es->lock);
-
-  pthread_mutex_lock(p->lock);
-  dll_append(g_list->users[p->from], new_jval_v(p));
-  pthread_mutex_unlock(p->lock);
-
+  if (p->from < p->to)
+  {
+    // pthread_mutex_lock(p->lock);
+    dll_append(g_list->users_up[p->from], new_jval_v(p));
+    // pthread_mutex_unlock(p->lock);
+  }
+  else
+  {
+    // pthread_mutex_lock(p->lock);
+    dll_append(g_list->users_down[p->from], new_jval_v(p));
+    // pthread_mutex_unlock(p->lock);
+  }
   pthread_mutex_unlock(p->es->lock);
 }
 
@@ -113,10 +122,8 @@ void person_done(Person *p)
   pthread_mutex_unlock(p->e->lock);
 }
 
-int rand_lim(int limit)
+int randr(int limit)
 {
-  /* return a random number between 0 and limit inclusive.
-  */
   int num = rand() % limit + 1;
   return num;
 }
@@ -128,22 +135,23 @@ void *elevator(void *arg)
   user_list_struct_t *e_list = e->v;
 
   int going_up = 1;
-  int current_floor = 1;
+  int current_floor = randr(e->es->nfloors);
 
   while (true)
   {
-    // if(DEBUG)
-    // {
-    //   Dllist tmp;
-    //   dll_traverse(tmp, e->people)
-    //   {
-    //     Person *p = (Person *) jval_v(dll_val(tmp));
-    //     printf(ANSI_COLOR_GREEN "%d %s, %d\n"ANSI_COLOR_RESET, pthread_self(), p->fname, p->to);
-    //   }
-    // }
+    if(DEBUG)
+    {
+      Dllist tmp;
+      dll_traverse(tmp, e->people)
+      {
+        Person *p = (Person *) jval_v(dll_val(tmp));
+        printf(ANSI_COLOR_GREEN "%d %s, %d\n"ANSI_COLOR_RESET, pthread_self(), p->fname, p->to);
+      }
+    }
 
     /* start from floor 1 and work your way up then back down continuously */
-    current_floor = rand_lim(e->es->nfloors);
+    if(DEBUG)
+    printf("%d\n", current_floor);
     move_to_floor(e, current_floor);
 
     // pthread_mutex_lock(e->es->lock);
@@ -151,51 +159,52 @@ void *elevator(void *arg)
     let_people_off (e, going_up, current_floor, e_list);
     // pthread_mutex_unlock(e->es->lock);
 
-    // let people on
-    // pthread_mutex_lock(e->es->lock);
-    // // let_people_on (e, going_up, current_floor, floor_list);
-    // pthread_mutex_unlock(e->lock);
-    // pthread_mutex_unlock(e->es->lock);
-
     if (e->door_open)
     close_door(e);
-    // if (e->onfloor == e->es->nfloors)
-    // going_up = 0;
-    // else if (e->onfloor == 1)
-    // going_up = 1;
 
-    // if (going_up)
-    // current_floor++;
-    // else if (!going_up)
-    // current_floor--;
+    if (going_up)
+    current_floor++;
+    else if (!going_up)
+    current_floor--;
+
+    if (e->onfloor == e->es->nfloors-1)
+    going_up = 0;
+    else if (e->onfloor == 2)
+    going_up = 1;
   }
   return NULL;
 }
 
 void let_people_on (Elevator *e, int going_up, int current_floor, user_list_struct_t *g_list)
 {
-  if (g_list->users[e->onfloor]->flink == g_list->users[e->onfloor])
-  return;
-  service_people (e, current_floor, g_list->users[current_floor]);
+  pthread_mutex_lock(g_list->block_elevator);
+  if (going_up)
+  {
+    service_people (e, current_floor, g_list->users_up[current_floor]);
+  }
+  if (!going_up)
+  {
+    service_people (e, current_floor, g_list->users_down[current_floor]);
+  }
+  pthread_mutex_unlock(g_list->block_elevator);
 }
 
 void service_people (Elevator *e, int current_floor, Dllist list)
 {
   user_list_struct_t *e_list = e->v;
 
-  pthread_mutex_lock(e_list->block_elevator);
   while (list->flink != list)
   {
+    if (!e->door_open)
+    {
+      open_door(e);
+    }
+
     Person *p = (Person *)(jval_v(list->flink->val));
     if(DEBUG)
     printf(ANSI_COLOR_BLUE "%d, %s, %d, %d\n" ANSI_COLOR_RESET, pthread_self(), p->fname, p->from, p->to);
 
     dll_delete_node(list->flink);
-
-    if (!e->door_open)
-    {
-      open_door(e);
-    }
 
     p->e = e;   // put the elevator in the person's e field
     pthread_mutex_lock(p->lock);
@@ -211,16 +220,10 @@ void service_people (Elevator *e, int current_floor, Dllist list)
     pthread_cond_wait(e->cond, e->lock);
     pthread_mutex_unlock(e->lock);
   }
-  pthread_mutex_unlock(e_list->block_elevator);
 }
 
 void let_people_off (Elevator * e, int going_up, int current_floor, user_list_struct_t *g_list)
 {
-  Dllist tmp;
-
-  if (g_list->users_leaving[e->onfloor]->flink == g_list->users_leaving[e->onfloor])
-  return;
-
   while (g_list->users_leaving[current_floor]->flink != g_list->users_leaving[current_floor])
   {
     Person *p = (Person *)(jval_v(g_list->users_leaving[current_floor]->flink->val));
