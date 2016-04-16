@@ -17,11 +17,11 @@ declare -a runs=(
 	);
 
 	printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
-	for i in "${runs[@]}"
-	do
-		echo "\tTest: $i"
-		./elevator_part_1 $i | ./reorder | ./double-check
-	done
+	# for i in "${runs[@]}"
+	# do
+	# 	echo "\tTest: $i"
+	# 	./elevator_part_1 $i | ./reorder | ./double-check
+	# done
 
 	printf "\n${RED}Reoder Tests For Part 2, no output means it's working.${NC}\n"
 	for i in "${runs[@]}"

@@ -38,7 +38,7 @@ void move_to_floor(Elevator *e, int floor)
   diff *= e->es->floor_to_floor_time;
   e->moving = 1;
   pthread_mutex_lock(e->es->lock);
-  printf("%8.3lf: Elevator %02d moving from floor %02d to floor %02d.\n", 
+  printf("%8.3lf: Elevator %02d moving from floor %02d to floor %02d.\n",
        finesleep_time(FINESLEEPER), e->id, e->onfloor, floor);
   fflush(stdout);
   pthread_mutex_unlock(e->es->lock);
@@ -46,7 +46,7 @@ void move_to_floor(Elevator *e, int floor)
   finesleep_sleep(FINESLEEPER, diff);
   pthread_mutex_lock(e->lock);
   pthread_mutex_lock(e->es->lock);
-  printf("%8.3lf: Elevator %02d arrives at floor %02d.\n", 
+  printf("%8.3lf: Elevator %02d arrives at floor %02d.\n",
        finesleep_time(FINESLEEPER), e->id, floor);
   fflush(stdout);
   pthread_mutex_unlock(e->es->lock);
@@ -117,7 +117,7 @@ void get_on_elevator(Person *p)
             finesleep_time(FINESLEEPER), p->fname, p->lname);
     exit(1);
   }
-    
+
   pthread_mutex_lock(e->lock);
   if (!e->door_open) {
     fprintf(stderr, "Error at time %.3lf: %s %s get_on_elevator(%02d) - door closed.\n",
@@ -137,7 +137,7 @@ void get_on_elevator(Person *p)
   dll_append(e->people, new_jval_v((void *) p));
   p->ptr = e->people->blink;
   pthread_mutex_lock(e->es->lock);
-  printf("%8.3lf: %s %s gets on elevator %02d on floor %02d.\n", finesleep_time(FINESLEEPER), 
+  printf("%8.3lf: %s %s gets on elevator %02d on floor %02d.\n", finesleep_time(FINESLEEPER),
           p->fname, p->lname, e->id, e->onfloor);
   fflush(stdout);
   pthread_mutex_unlock(e->es->lock);
@@ -154,7 +154,7 @@ void get_off_elevator(Person *p)
             finesleep_time(FINESLEEPER), p->fname, p->lname);
     exit(1);
   }
-    
+
   pthread_mutex_lock(e->lock);
   if (!e->door_open) {
     fprintf(stderr, "Error at time %.3lf: %s %s get_off_elevator(%02d) - door closed.\n",
@@ -174,7 +174,7 @@ void get_off_elevator(Person *p)
   dll_delete_node(p->ptr);
   p->ptr = NULL;
   pthread_mutex_lock(p->es->lock);
-  printf("%8.3lf: %s %s gets off elevator %02d on floor %02d.\n", finesleep_time(FINESLEEPER), 
+  printf("%8.3lf: %s %s gets off elevator %02d on floor %02d.\n", finesleep_time(FINESLEEPER),
           p->fname, p->lname, e->id, e->onfloor);
   fflush(stdout);
   pthread_mutex_unlock(p->es->lock);
@@ -189,11 +189,11 @@ void *person(void *arg)
 
   pthread_mutex_lock(p->es->lock);
   p->es->npeople_started++;
-  printf("%8.3lf: %s %s arrives at floor %02d wanting to go to floor %02d.\n", finesleep_time(FINESLEEPER), 
+  printf("%8.3lf: %s %s arrives at floor %02d wanting to go to floor %02d.\n", finesleep_time(FINESLEEPER),
          p->fname, p->lname, p->from, p->to);
   fflush(stdout);
   pthread_mutex_unlock(p->es->lock);
-          
+
   wait_for_elevator(p);
   get_on_elevator(p);
   wait_to_get_off_elevator(p);
@@ -230,8 +230,8 @@ void *person_gen(void *arg)
     tosleep = -1.0 * log(1.0 - drand48()) * es->interarrival_time;
     finesleep_sleep(FINESLEEPER, tosleep);
     p = talloc(Person, 1);
-    p->fname = FNAMES[lrand48()%200];   
-    s = LNAMES[lrand48()%200];   
+    p->fname = FNAMES[lrand48()%200];
+    s = LNAMES[lrand48()%200];
     p->lname = talloc(char, strlen(s)+20);
     sprintf(p->lname, "%s(%d)", s, pn);
     pn++;
@@ -283,7 +283,7 @@ main(int argc, char **argv)
   int i;
   Elevator *e;
   double duration;
-  
+
   long seed;
   es = &ES;
 
