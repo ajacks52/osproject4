@@ -28,6 +28,9 @@ elevator_part_1: elevator_skeleton.o elevator_part_1.o finesleep.o libfdr.a
 elevator_part_2: elevator_skeleton.o elevator_part_2.o finesleep.o libfdr.a
 	$(CC) $(CFLAGS) -o elevator_part_2 elevator_skeleton.o elevator_part_2.o finesleep.o $(LIBS) -lpthread -lm
 
+elevator_part_3: elevator_skeleton.o elevator_part_3.o finesleep.o libfdr.a
+	$(CC) $(CFLAGS) -o elevator_part_3 elevator_skeleton.o elevator_part_3.o finesleep.o $(LIBS) -lpthread -lm
+
 elevator_skeleton.o: elevator.h names.h
 elevator.o: elevator.h
 

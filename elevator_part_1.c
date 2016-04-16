@@ -1,8 +1,7 @@
 /*
  * Created by Adam Mitchell on 4/2/16.
  *
- *
- * Part1 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
+ * Part 1 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
  * and be delivered the floor they request.  The concepts involved here are p_thread synchronization and scheduling
  * algorithms.
  */
@@ -14,7 +13,6 @@
 
 // stole from elevator sim clean way of mallocing data
 #define talloc(ty, sz) (ty *) malloc ((sz) * sizeof(ty))
-
 
 // global list of users and a condition variable
 typedef struct {

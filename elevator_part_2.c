@@ -2,7 +2,7 @@
 * Created by Adam Mitchell on 4/2/16.
 *
 *
-* Part1 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
+* Part 2 of the infamous elevator lab where elevator patrons are to enter elevator one at a time
 * and be delivered the floor they request.  The concepts involved here are p_thread synchronization and scheduling
 * algorithms.
 */
@@ -13,9 +13,6 @@
 #include <pthread.h>
 #include "elevator.h"
 
-// stole from elevator sim clean way of mallocing data
-#define talloc(ty, sz) (ty *) malloc ((sz) * sizeof(ty))
-
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -23,6 +20,8 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+// stole from elevator skeleton, clean way of mallocing data
+#define talloc(ty, sz) (ty *) malloc ((sz) * sizeof(ty))
 
 typedef struct {
   Dllist users_up [1000];
@@ -31,16 +30,14 @@ typedef struct {
   pthread_cond_t *block_elevator;
 } user_list_struct_t;
 
-bool DEBUG = 0;
-
 void let_people_on (Elevator * e, int going_up, int current_floor, user_list_struct_t *g_list);
 void let_people_off (Elevator * e, int going_up, int current_floor, user_list_struct_t *g_list);
+bool DEBUG = 0;
 
 
 void initialize_simulation(Elevator_Simulation *es)
 {
   // global list of users and a condition variable
-
   user_list_struct_t * g_list = talloc(user_list_struct_t, 1);
   g_list->block_elevator = talloc(pthread_cond_t, 1);
   pthread_cond_init(g_list->block_elevator, NULL);
@@ -60,13 +57,14 @@ void initialize_elevator(Elevator *e)
   user_list_struct_t * g_list = talloc(user_list_struct_t, 1);
   g_list->block_elevator = talloc(pthread_cond_t, 1);
   pthread_cond_init(g_list->block_elevator, NULL);
-
   int i = 1;
+
+  // give each elevator nfloors of lists, so the elevator
+  // knows where it's users are to be dropped off
   for(; i <= e->es->nfloors; i++)
   {
     g_list->users_leaving[i] = new_dllist();
   }
-
   e->v = g_list;
 }
 
