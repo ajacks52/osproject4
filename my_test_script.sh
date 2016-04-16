@@ -1,4 +1,5 @@
-#!/bin/sh
+#
+#!/bin/bash
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -19,14 +20,14 @@ declare -a runs=(
 printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
 for i in "${runs[@]}"
 do
-	printf "\tTest: $i\n"
+	printf "Test: $i\n"
 	./elevator_part_1 $i | ./reorder | ./double-check
 done
 
 printf "\n${RED}Reoder Tests For Part 2, no output means it's working.${NC}\n"
 for i in "${runs[@]}"
 do
-	printf "\tTest: $i\n"
+	printf "Test: $i\n"
 	./elevator_part_2 $i | ./reorder | ./double-check
 done
 
