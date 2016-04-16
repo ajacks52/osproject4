@@ -2,7 +2,7 @@ EXECUTABLES = elevator_null elevator_part_1 elevator_part_2 elevator_part_3 reor
 
 CC = gcc
 LIBS = libfdr.a
-CFLAGS = -O0 -g
+CFLAGS = -O2
 
 LIBFDROBJS = dllist.o fields.o jval.o jrb.o
 
