@@ -19,14 +19,14 @@ declare -a runs=(
 printf "\n${RED}Reoder Tests For Part 1, no output means it's working.${NC}\n"
 for i in "${runs[@]}"
 do
-	printf "\tTest: $i"
+	printf "\tTest: $i\n"
 	./elevator_part_1 $i | ./reorder | ./double-check
 done
 
 printf "\n${RED}Reoder Tests For Part 2, no output means it's working.${NC}\n"
 for i in "${runs[@]}"
 do
-	printf "\tTest: $i"
+	printf "\tTest: $i\n"
 	./elevator_part_2 $i | ./reorder | ./double-check
 done
 
